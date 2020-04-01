@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 
 use App\Course;
 use App\Student;
+use App\Util;
+
 
 use Illuminate\Support\Facades\DB;
 
@@ -56,23 +58,28 @@ class StudentController extends Controller
     {
         DB::beginTransaction();
 
-        try{            
+        try{   
+            
+            $validate = Util::validate($request->all(),Util::getStudentRules());
+
+            if($validate['valid']){
+                return response()->json(['success'=> 'false' ,'msg' => $validate['str']], 400);
+            } 
+
+            if (!Course::where('id', '=', $request->course)->exists()) {
+                return response()->json(['success'=> 'false' ,'msg' => 'Course does not exist'], 400);
+            }
 
             $rut = str_replace('.', '', $request->rut);
            
             if(Rut::parse($rut)->validate()){
 
-                if($request->age>18){
-
-                    $rut = Rut::parse($rut)->format(Rut::FORMAT_WITH_DASH);
+                $rut = Rut::parse($rut)->format(Rut::FORMAT_WITH_DASH);
                     //$request->rut = $rut;
-                    $data = new Student($request->all()); 
-                    $data->rut = $rut;
-                    $data->save(); 
-                }
-                else {
-                    return response()->json(['success'=> 'false' ,'msg' => 'Age should be more than 18'], 400);
-                }
+                $data = new Student($request->all()); 
+                $data->rut = $rut;
+                $data->save(); 
+                
             }
            
         }catch (\Exception $e){
@@ -134,26 +141,26 @@ class StudentController extends Controller
 
             if($check>0){
 
-                $rut = str_replace('.', '', $request->rut);
-           
-                if(Rut::parse($rut)->validate()){
-    
-                    if($request->age>18){
-    
-                        $rut = Rut::parse($rut)->format(Rut::FORMAT_WITH_DASH);
-                        
-                        $data = Student::find($id);
+                $validate = Util::validate($request->all(),Util::getStudentRules());
 
-                        $data->fill($request->all());
-                        $data->rut = $rut;
-                        $data->save();
+                if($validate['valid']){
+                    return response()->json(['success'=> 'false' ,'msg' => $validate['str']], 400);
+                } 
 
-                    }
-                    else {
-                        return response()->json(['success'=> 'false' ,'msg' => 'Age should be more than 18'], 400);
-                    }
+                if (!Course::where('id', '=', $request->course)->exists()) {
+                    return response()->json(['success'=> 'false' ,'msg' => 'Course does not exist'], 404);
                 }
 
+                $rut = str_replace('.', '', $request->rut);
+           
+                if(Rut::parse($rut)->validate()){    
+    
+                    $rut = Rut::parse($rut)->format(Rut::FORMAT_WITH_DASH);                        
+                    $data = Student::find($id);
+                    $data->fill($request->all());
+                    $data->rut = $rut;
+                    $data->save();
+                }
 
             }
             else {

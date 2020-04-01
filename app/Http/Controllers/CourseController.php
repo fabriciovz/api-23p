@@ -72,15 +72,15 @@ class CourseController extends Controller
         try{                     
         
 
-            $validate = Util::validate($request->all());
+            $validate = Util::validate($request->all(), Util::getCourseRules());
 
-            if(!$validate['valid']){
-                $data = new Course($request->all());                   
-                $data->save();  
-            } 
-            else {
+            if($validate['valid']){
+
                 return response()->json(['success'=> 'false' ,'msg' => $validate['str']], 400);
-            }    
+            } 
+            
+            $data = new Course($request->all());                   
+            $data->save();  
           
             
         }catch (\Exception $e){
@@ -143,13 +143,10 @@ class CourseController extends Controller
             if($check>0){
 
 
-                $validate = Util::validate($request->all());
+                $validate = Util::validate($request->all(), Util::getCourseRules());
 
-                if(!$validate['valid']){
-                    $data = new Course($request->all());                   
-                    $data->save();  
-                } 
-                else {
+                if($validate['valid']){
+
                     return response()->json(['success'=> 'false' ,'msg' => $validate['str']], 400);
                 } 
 

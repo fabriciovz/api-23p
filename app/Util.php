@@ -28,6 +28,8 @@ class Util extends Model
             'name.required' => 'Name is required',
             'lastName.required' => 'Last Name is required',
             'age.required' => 'Age is required',
+            'age.min' => 'Age should be more than 18',
+            'age.numeric' => 'Age should be a numeric value',
             'course.required' => 'Course is required',
         ];
 
@@ -37,15 +39,28 @@ class Util extends Model
 
         return [
             'code' => 'required|size:4',
-            'name' => 'required|min:1',
+            'name' => 'required',
         ];
         
     }
 
-    public static function validate($req){
+    public static function getStudentRules(){
+
+        return [
+            'rut' => 'required',
+            'name' => 'required',
+            'lastName' => 'required',
+            'age' => 'required|numeric|min:19',
+            'course' => 'required'
+        ];
+        
+    }
+
+    public static function validate($req, $rules){
 
 
-        $validator = Validator::make($req, Util::getCourseRules(),Util::getMessages());
+        $validator = Validator::make($req, $rules,Util::getMessages());
+
 
         $strMessage = "";
 
@@ -66,6 +81,7 @@ class Util extends Model
         ];
         
     }
+
 
 
 }
