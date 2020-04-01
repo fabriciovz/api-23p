@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use App\Course;
 use App\Student;
 
-use App\Generic;
+use App\Util;
 
 
 use Illuminate\Support\Facades\DB;
@@ -69,10 +69,19 @@ class CourseController extends Controller
 
         DB::beginTransaction();
 
-        try{                
-           
-            $data = new Course($request->all());                   
-            $data->save();             
+        try{                     
+        
+
+            $validate = Util::validate($request->all());
+
+            if(!$validate['valid']){
+                $data = new Course($request->all());                   
+                $data->save();  
+            } 
+            else {
+                return response()->json(['success'=> 'false' ,'msg' => $validate['str']], 400);
+            }    
+          
             
         }catch (\Exception $e){
             DB::rollback();
@@ -132,6 +141,17 @@ class CourseController extends Controller
             $check = Course::where('id', '=', $id)->count(); 
 
             if($check>0){
+
+
+                $validate = Util::validate($request->all());
+
+                if(!$validate['valid']){
+                    $data = new Course($request->all());                   
+                    $data->save();  
+                } 
+                else {
+                    return response()->json(['success'=> 'false' ,'msg' => $validate['str']], 400);
+                } 
 
                 $data = Course::find($id);
                 $data->fill($request->all());
