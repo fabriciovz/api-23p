@@ -9,6 +9,9 @@ use App\Student;
 
 use Illuminate\Support\Facades\DB;
 
+use Freshwork\ChileanBundle\Rut;
+
+
 class StudentController extends Controller
 {
     /**
@@ -57,7 +60,27 @@ class StudentController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        DB::beginTransaction();
+
+        try{            
+
+            $rut = str_replace('.', '', $request->rut);
+           
+            if(Rut::parse($rut)->validate()){
+
+                $rut = Rut::parse($rut)->format(Rut::FORMAT_WITH_DASH);
+                //$request->rut = $rut;
+                $data = new Student($request->all()); 
+                $data->rut = $rut;
+                $data->save();  
+            }
+           
+        }catch (\Exception $e){
+            DB::rollback();
+            return response()->json(['success'=> 'false' ,'msg' => 'Error: '.$e->getMessage()], 400);
+        }
+        DB::commit();
+        return response()->json(['success'=> 'true' ,'msg' => 'Created Successfully ','items' =>$data ], 201);
     }
 
     /**
