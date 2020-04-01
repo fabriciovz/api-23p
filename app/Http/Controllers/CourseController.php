@@ -25,7 +25,13 @@ class CourseController extends Controller
 
         try {
                       
-            $data = Course::all();//getConocimientos()->where('p_unidades.id',$id)->get();         
+            //$data = Course::all();
+            $data = Course::paginate(5);//getConocimientos()->where('p_unidades.id',$id)->get(); 
+                    
+            if($data->total()<1){
+                DB::rollback();
+                return response()->json(['success'=> 'false' ,'msg' => 'No records found'], 404);
+            }
 
         }catch (\Exception $e){
             DB::rollback();
@@ -33,7 +39,7 @@ class CourseController extends Controller
         }
         
         DB::commit();
-        return response()->json(['success'=> 'true' ,'msg' => '', 'items' =>$data], 200);     
+        return response()->json(['success'=> 'true' ,'msg' => 'Record(s) Found', 'items' =>$data], 200);     
     }
 
     public function getAll()

@@ -23,7 +23,25 @@ class StudentController extends Controller
      */
     public function index()
     {
-        //
+        DB::beginTransaction();
+
+        try {
+                      
+            //$data = Course::all();
+            $data = Student::paginate(5);//getConocimientos()->where('p_unidades.id',$id)->get(); 
+
+            if($data->total()<1){
+                DB::rollback();
+                return response()->json(['success'=> 'false' ,'msg' => 'No records found'], 404);
+            }
+
+        }catch (\Exception $e){
+            DB::rollback();
+            return response()->json(['success'=> 'false' ,'msg' => 'Error: '.$e->getMessage()], 400);
+        }
+        
+        DB::commit();
+        return response()->json(['success'=> 'true' ,'msg' => 'Record(s) Found', 'items' =>$data], 200);     
     }
 
     public function getAll()
