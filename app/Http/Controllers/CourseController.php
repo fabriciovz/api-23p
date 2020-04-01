@@ -42,7 +42,12 @@ class CourseController extends Controller
 
         try {
                       
-            $data = Course::all();//getConocimientos()->where('p_unidades.id',$id)->get();         
+            $data = Course::all();  
+            
+            if(count($data)<1){
+                DB::rollback();
+                return response()->json(['success'=> 'false' ,'msg' => 'No records found'], 404);
+            }
 
         }catch (\Exception $e){
             DB::rollback();
@@ -50,7 +55,7 @@ class CourseController extends Controller
         }
         
         DB::commit();
-        return response()->json(['success'=> 'true' ,'msg' => '', 'items' =>$data], 200);     
+        return response()->json(['success'=> 'true' ,'msg' => 'Record(s) Found', 'items' =>$data], 200);     
     }
 
      /**
@@ -94,7 +99,7 @@ class CourseController extends Controller
             $check = Course::where('id', '=', $id)->count(); 
 
             if($check>0){
-                $data = Course::find($id)->get();
+                $data = Course::find($id);
             }
             else {
                 DB::rollback();
@@ -107,7 +112,7 @@ class CourseController extends Controller
         }
         
         DB::commit();
-        return response()->json(['success'=> 'true' ,'msg' => '', 'items' =>$data], 200);     
+        return response()->json(['success'=> 'true' ,'msg' => 'Record Found', 'items' =>$data], 200);     
     }
 
      /**
@@ -142,7 +147,7 @@ class CourseController extends Controller
             return response()->json(['success'=> 'false' ,'msg' => 'Error: '.$e->getMessage()], 400);
         }
         DB::commit();
-        return response()->json(['success'=> 'true' ,'msg' => '', 'items' =>$data], 200);     
+        return response()->json(['success'=> 'true' ,'msg' => 'Updated Successfully', 'items' =>$data], 200);     
     }
 
     /**
@@ -176,6 +181,6 @@ class CourseController extends Controller
             return response()->json(['success'=> 'false'  ,'msg' => 'Error: '.$e->getMessage()], 400);
         }
         DB::commit();
-        return response()->json(['success'=> 'true' ,'msg' => '', 'items' =>$data], 200); 
+        return response()->json(['success'=> 'true' ,'msg' => 'Deleted Successfully', 'items' =>$data], 200); 
     }
 }

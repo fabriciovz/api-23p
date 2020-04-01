@@ -30,7 +30,12 @@ class StudentController extends Controller
 
         try {
                       
-            $data = Student::all();//getConocimientos()->where('p_unidades.id',$id)->get();         
+            $data = Student::all(); 
+            
+            if(count($data)<1){
+                DB::rollback();
+                return response()->json(['success'=> 'false' ,'msg' => 'No records found'], 404);
+            }
 
         }catch (\Exception $e){
             DB::rollback();
@@ -38,18 +43,7 @@ class StudentController extends Controller
         }
         
         DB::commit();
-        return response()->json($data, 200);
-    }
-
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
+        return response()->json(['success'=> 'true' ,'msg' => 'Record(s) Found', 'items' =>$data], 200);     
     }
 
     /**
@@ -68,11 +62,17 @@ class StudentController extends Controller
            
             if(Rut::parse($rut)->validate()){
 
-                $rut = Rut::parse($rut)->format(Rut::FORMAT_WITH_DASH);
-                //$request->rut = $rut;
-                $data = new Student($request->all()); 
-                $data->rut = $rut;
-                $data->save();  
+                if($request->age>18){
+
+                    $rut = Rut::parse($rut)->format(Rut::FORMAT_WITH_DASH);
+                    //$request->rut = $rut;
+                    $data = new Student($request->all()); 
+                    $data->rut = $rut;
+                    $data->save(); 
+                }
+                else {
+                    return response()->json(['success'=> 'false' ,'msg' => 'Age should be more than 18'], 400);
+                }
             }
            
         }catch (\Exception $e){
@@ -91,6 +91,8 @@ class StudentController extends Controller
      */
     public function show($id)
     {
+
+        //print_r($id); die();
         DB::beginTransaction();
 
         try {
@@ -98,31 +100,20 @@ class StudentController extends Controller
             $check = Student::where('id', '=', $id)->count(); 
 
             if($check>0){
-                $data = Student::find($id)->get();
+                $data = Student::find($id);
             }
             else {
                 DB::rollback();
-                return response()->json(['success'=> 'false' ,'msg' => 'No records found', 'items' => array()], 400);
+                return response()->json(['success'=> 'false' ,'msg' => 'No records found'], 400);
             }
 
         }catch (\Exception $e){
             DB::rollback();
-            return response()->json(['success'=> 'false' ,'msg' => 'Error: '.$e->getMessage(), 'items' => array()], 400);
+            return response()->json(['success'=> 'false' ,'msg' => 'Error: '.$e->getMessage()], 400);
         }
         
         DB::commit();
-        return response()->json(['success'=> 'true' ,'msg' => '', 'items' =>$data], 200);  
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
+        return response()->json(['success'=> 'true' ,'msg' => 'Record Found', 'items' =>$data], 200);  
     }
 
     /**
@@ -134,7 +125,49 @@ class StudentController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        
+        DB::beginTransaction();
+
+        try {
+
+            $check = Student::where('id', '=', $id)->count(); 
+
+            if($check>0){
+
+                $rut = str_replace('.', '', $request->rut);
+           
+                if(Rut::parse($rut)->validate()){
+    
+                    if($request->age>18){
+    
+                        $rut = Rut::parse($rut)->format(Rut::FORMAT_WITH_DASH);
+                        
+                        $data = Student::find($id);
+
+                        $data->fill($request->all());
+                        $data->rut = $rut;
+                        $data->save();
+
+                    }
+                    else {
+                        return response()->json(['success'=> 'false' ,'msg' => 'Age should be more than 18'], 400);
+                    }
+                }
+
+
+            }
+            else {
+                DB::rollback();
+                return response()->json(['success'=> 'false' ,'msg' => 'No records found'], 404);
+            }
+            
+        }catch (\Exception $e){
+            DB::rollback();
+            return response()->json(['success'=> 'false' ,'msg' => 'Error: '.$e->getMessage()], 400);
+        }
+        DB::commit();
+        return response()->json(['success'=> 'true' ,'msg' => 'Updated Successfully', 'items' =>$data], 200);    
+
     }
 
     /**
@@ -145,6 +178,27 @@ class StudentController extends Controller
      */
     public function destroy($id)
     {
-        //
+        DB::beginTransaction();
+
+        try {     
+            
+            $check = Student::where('id', '=', $id)->count(); 
+
+            if($check>0){
+
+                $data = Student::find($id);
+                $data->delete();  
+            }
+            else {
+                DB::rollback();
+                return response()->json(['success'=> 'false' ,'msg' => 'No records found'], 404);
+            }    
+
+        }catch (\Exception $e){
+            DB::rollback();
+            return response()->json(['success'=> 'false'  ,'msg' => 'Error: '.$e->getMessage()], 400);
+        }
+        DB::commit();
+        return response()->json(['success'=> 'true' ,'msg' => 'Deleted Successfully', 'items' =>$data], 200); 
     }
 }

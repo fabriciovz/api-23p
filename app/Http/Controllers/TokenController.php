@@ -26,7 +26,7 @@ class TokenController extends Controller
 
         return response()->json([
             'access_token' => $token,
-            'token_type' => 'bearer'
+            'token_type' => 'Bearer'
         ], 200);
         
     }
