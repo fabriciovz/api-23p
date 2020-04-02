@@ -1,23 +1,26 @@
 <?php
 
 namespace App\Http\Controllers;
-
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
+//Persistent Models
 use App\Course;
 use App\Student;
+
+//Non Persistent Models
 use App\Util;
 
 
-use Illuminate\Support\Facades\DB;
-
+//I installed "freshwork/chilean-bundle" package to check if a rut is valid and format them
 use Freshwork\ChileanBundle\Rut;
 
 
+//Class to manage endpoints of Student 
 class StudentController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display a listing of courses with pagination.
      *
      * @return \Illuminate\Http\Response
      */
@@ -27,8 +30,7 @@ class StudentController extends Controller
 
         try {
                       
-            //$data = Course::all();
-            $data = Student::paginate(5);//getConocimientos()->where('p_unidades.id',$id)->get(); 
+            $data = Student::paginate(5);
 
             if($data->total()<1){
                 DB::rollback();
@@ -44,6 +46,11 @@ class StudentController extends Controller
         return response()->json(['success'=> 'true' ,'msg' => 'Record(s) Found', 'items' =>$data], 200);     
     }
 
+    /**
+     * Display a listing of all students.
+     *
+     * @return \Illuminate\Http\Response
+     */
     public function getAll()
     {
         DB::beginTransaction();
@@ -67,7 +74,7 @@ class StudentController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Store a created student.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
@@ -84,16 +91,20 @@ class StudentController extends Controller
                 return response()->json(['success'=> 'false' ,'msg' => $validate['str']], 400);
             } 
 
+            //Check if the course does not exist
             if (!Course::where('id', '=', $request->course)->exists()) {
                 return response()->json(['success'=> 'false' ,'msg' => 'Course does not exist'], 400);
             }
 
+            //Remove all dots from rut
             $rut = str_replace('.', '', $request->rut);
            
+            //Check if the rut is valid 
             if(Rut::parse($rut)->validate()){
 
+                //Format the rut (XXXXXXXX-X)
                 $rut = Rut::parse($rut)->format(Rut::FORMAT_WITH_DASH);
-                    //$request->rut = $rut;
+
                 $data = new Student($request->all()); 
                 $data->rut = $rut;
                 $data->save(); 
@@ -109,7 +120,7 @@ class StudentController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * Display the specified student.
      *
      * @param  int  $id
      * @return \Illuminate\Http\Response
@@ -117,7 +128,6 @@ class StudentController extends Controller
     public function show($id)
     {
 
-        //print_r($id); die();
         DB::beginTransaction();
 
         try {
@@ -142,7 +152,7 @@ class StudentController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Update the specified student.
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  int  $id
@@ -165,15 +175,20 @@ class StudentController extends Controller
                     return response()->json(['success'=> 'false' ,'msg' => $validate['str']], 400);
                 } 
 
+                //Check if the course does not exist
                 if (!Course::where('id', '=', $request->course)->exists()) {
                     return response()->json(['success'=> 'false' ,'msg' => 'Course does not exist'], 404);
                 }
 
+                //Remove all dots from rut
                 $rut = str_replace('.', '', $request->rut);
            
+                //Check if the rut is valid 
                 if(Rut::parse($rut)->validate()){    
     
-                    $rut = Rut::parse($rut)->format(Rut::FORMAT_WITH_DASH);                        
+                    //Format the rut (XXXXXXXX-X)
+                    $rut = Rut::parse($rut)->format(Rut::FORMAT_WITH_DASH);
+
                     $data = Student::find($id);
                     $data->fill($request->all());
                     $data->rut = $rut;
@@ -196,7 +211,7 @@ class StudentController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Remove the specified student.
      *
      * @param  int  $id
      * @return \Illuminate\Http\Response

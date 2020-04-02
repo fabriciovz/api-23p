@@ -3,7 +3,7 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\DB;
+
 use Illuminate\Support\Facades\Validator;
 
 
@@ -15,15 +15,17 @@ class Util extends Model
      */
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @return array of validations
      */
     public static function getMessages(){
 
         return [
+            //associated messages to course
             'code.required' => 'Code is required',
             'name.required' => 'Name is required',
             'name.min' => 'Name has to have at least :min characters',
             
+            //associated messages to students
             'rut.required' => 'Rut is required',
             'name.required' => 'Name is required',
             'lastName.required' => 'Last Name is required',
@@ -35,6 +37,9 @@ class Util extends Model
 
     }
 
+    /**
+     * @return array of rules (Course)
+     */
     public static function getCourseRules(){
 
         return [
@@ -44,6 +49,9 @@ class Util extends Model
         
     }
 
+    /**
+     * @return array of rules (Student)
+     */
     public static function getStudentRules(){
 
         return [
@@ -56,21 +64,29 @@ class Util extends Model
         
     }
 
+    /**
+     * Check if a request is valid.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Illuminate\Http\Request  $rules
+     * @return \Illuminate\Http\Response
+     */
     public static function validate($req, $rules){
 
-
+        //Validate if a request is valid
         $validator = Validator::make($req, $rules,Util::getMessages());
-
 
         $strMessage = "";
 
+        //If the request is not valid then...
         if ($validator->fails()) {
 
+            //get errors 
             $errors = $validator->errors();
 
+            //iterate  to make a string 
             foreach ($errors->all() as $message) {
                 $strMessage.= $message."<\br>";
-
             }
         
         }
